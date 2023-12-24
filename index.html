@@ -1,0 +1,53 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Chat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+</head>
+<body>
+  <div id="chat"></div>
+  <div>
+    <input type="text" id="usernameInput" placeholder="Your Name">
+    <input type="color" id="colorInput" value="#000000">
+    <button onclick="joinChat()">Join Chat</button>
+  </div>
+  <div>
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const socket = io();
+
+    function joinChat() {
+      const username = document.getElementById('usernameInput').value;
+      const color = document.getElementById('colorInput').value;
+
+      if (username.trim() !== '') {
+        socket.emit('join', username, color);
+        document.getElementById('usernameInput').setAttribute('disabled', 'disabled');
+      }
+    }
+
+    socket.on('message', (data) => {
+      const chatDiv = document.getElementById('chat');
+      chatDiv.innerHTML += `<p style="color: ${data.color}">${data.username}: ${data.message}</p>`;
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    });
+
+    socket.on('updateUsers', (users) => {
+      const userList = users.map(user => user.username).join(', ');
+      document.getElementById('chat').innerHTML += `<p style="color: red">Сейчас в чате: ${userList}</p>`;
+    });
+
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      socket.emit('message', { username: 'You', message, color: document.getElementById('colorInput').value });
+      document.getElementById('messageInput').value = '';
+    }
+  </script>
+</body>
+</html>
